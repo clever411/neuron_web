@@ -111,7 +111,6 @@ void learn_errors(
  */
 template<typename T, std::size_t OUTC, std::size_t INC>
 void reverse_propagation(
-	Layer<T, OUTC> const &out,
 	Layer<T, INC> const &in,
 	Weights<T, INC+1, OUTC> &w,
 	std::array<T, OUTC> err

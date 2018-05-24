@@ -1,4 +1,4 @@
-all: debug
+all: release
 
 
 debug: main.cpp
@@ -7,8 +7,6 @@ debug: main.cpp
 release: main.cpp
 	g++ -o neuweb -O3 main.cpp
 
-fill: fill.out
-	fill.out
 
-fill.out: fill_test_file.cpp
-	g++ -o fill.out -g3 -Wall fill_test_file.cpp
+fill: fill_test_file.cpp
+	g++ -o fill -O3 fill_test_file.cpp

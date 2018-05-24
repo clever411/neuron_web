@@ -136,8 +136,8 @@ int main(int argc, char const *argv[])
 			learn_errors(output, ideal, erro);
 			learn_errors(hidden, how, erro, errh);
 
-			reverse_propagation(output, hidden, how, erro);
-			reverse_propagation(hidden, input, ihw, errh);
+			reverse_propagation(hidden, how, erro);
+			reverse_propagation(input, ihw, errh);
 
 			if(info.is_open()) {
 				mse = 0.0f;
