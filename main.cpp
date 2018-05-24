@@ -8,9 +8,6 @@
 
 #include "NeuronWeb.hpp"
 
-#include <clever/IostreamFunctions.hpp>
-
-using namespace clever;
 using namespace std;
 
 
@@ -97,11 +94,11 @@ int main(int argc, char const *argv[])
 	Layer<double, OUTPUT_NEURONS> output;
 
 
-	NeuronWeights<INPUT_NEURONS, HIDDEN_NEURONS> ihw;
-	NeuronWeights<HIDDEN_NEURONS, OUTPUT_NEURONS> how;
+	Weights<double, INPUT_NEURONS+1, HIDDEN_NEURONS> ihw;
+	Weights<double, HIDDEN_NEURONS+1, OUTPUT_NEURONS> how;
 
-	ihw.randomInit();
-	how.randomInit();
+	init_weights_random(ihw);
+	init_weights_random(how);
 
 	// learning
 	{

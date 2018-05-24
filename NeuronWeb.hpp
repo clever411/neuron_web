@@ -4,59 +4,40 @@
 #include <array>
 #include <random>
 
+#include "Matrix.hpp"
 
-// Neuron layer
+/*
+ * Neuron layer
+ */
 template<typename T, size_t N>
 using Layer = std::array<T, N>;
 
 
+/*
+ * Веса в нейронной сети. Являются матрицей. При создании весов
+ * необходимо указать тип, которым будет представлены весы,
+ * количество входных нейроннов+1 и количество выходных
+ * нейроннов. +1 для входных нейронов необходим т.к. дополнительный
+ * входной нейрон представляет собой смещения для выходных
+ * нейроннов.
+ */
+template<typename T, size_t INC_plus_one, size_t OUTC>
+using Weights = clever::Matrix<T, INC_plus_one, OUTC>;
+
 
 /*
- * Структура представляет из себя матрицу весов, имеет вспомогательные
- * функции.
+ * initialize weights by random values
  */
-template<size_t INPUT_COUNT, size_t OUTPUT_COUNT, typename ValueType = double>
-struct NeuronWeights
+template<typename T, size_t INC_plus_one, size_t OUTC>
+void init_weights_random(Weights<T, INC_plus_one, OUTC> &w)
 {
-	typedef ValueType value_type;
-
-	constexpr static size_t const INPUTC = INPUT_COUNT;
-	constexpr static size_t const OUTPUTC = OUTPUT_COUNT;
-
-	value_type d[INPUTC+1][OUTPUTC];
-
-	NeuronWeights &init()
-	{
-		return init(value_type());
+	for(size_t o = 0; o < OUTC; ++o) {
+		for(size_t i = 0; i < INC_plus_one; ++i) {
+			w[i][o] = double(rand())/RAND_MAX;
+		}
 	}
-	NeuronWeights &init(value_type defv = value_type())
-	{
-		for(std::size_t i = 0; i < INPUTC+1; ++i)
-			for(std::size_t o = 0; o < OUTPUTC; ++o)
-				d[i][o] = defv;
-		return *this;
-	}
-
-	NeuronWeights &randomInit()
-	{
-		for(size_t i = 0; i < INPUTC+1; ++i)
-			for(size_t o = 0; o < OUTPUTC; ++o)
-				d[i][o] = double(rand())/RAND_MAX;
-		return *this;
-	}
-
-
-	value_type const *operator[](int i) const
-	{
-		return d[i];
-	}
-	value_type *operator[](int i)
-	{
-		return d[i];
-	}
-
-};
-
+	return;
+}
 
 
 
@@ -67,16 +48,16 @@ template<typename T, size_t INC, size_t OUTC>
 void forward_propagation(
 	Layer<T, INC> const &in,
 	Layer<T, OUTC> &out,
-	NeuronWeights<INC, OUTC, T> const &weights
+	Weights<T, INC+1, OUTC> const &w
 )
 {
 #define sigmoid(x) ( 1.0f / ( 1.0f + exp(-(x)) ) )
 	for(size_t o = 0; o < OUTC; ++o) {
 		out[o] = 0;
 		for(size_t i = 0; i < INC; ++i) {
-			out[o] += in[i]*weights[i][o];
+			out[o] += in[i]*w[i][o];
 		}
-		out[o] += weights[INC][o];
+		out[o] += w[INC][o];
 		out[o] = sigmoid(out[o]);
 	}
 	return;
@@ -108,7 +89,7 @@ void learn_errors(
 template<typename T, size_t INC, size_t OUTC>
 void learn_errors(
 	Layer<T, INC> const &in,
-	NeuronWeights<INC, OUTC, T> const &w,
+	Weights<T, INC+1, OUTC> const &w,
 	std::array<T, OUTC> const &erro,
 	std::array<T, INC> &erri
 )
@@ -132,7 +113,7 @@ template<typename T, std::size_t OUTC, std::size_t INC>
 void reverse_propagation(
 	Layer<T, OUTC> const &out,
 	Layer<T, INC> const &in,
-	NeuronWeights<INC, OUTC, T> &w,
+	Weights<T, INC+1, OUTC> &w,
 	std::array<T, OUTC> err
 )
 {
