@@ -1,3 +1,4 @@
+#include <array>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -19,23 +20,6 @@ typedef struct
 	double knife;
 	double gun;
 	double enemy;
-	
-	double operator[](int n)
-	{
-		switch(n) {
-		case 0:
-			return health;
-		case 1:
-			return knife;
-		case 2:
-			return gun;
-		case 3:
-			return enemy;
-		default:
-			throw "out of range in Output";
-		}
-	}
-
 } Input;
 
 template<class Istream> Istream &operator>>(Istream &is, Input &input)
@@ -55,22 +39,6 @@ typedef struct
 	double run;
 	double wander;
 	double hide;
-
-	double operator[](int n)
-	{
-		switch(n) {
-		case 0:
-			return attack;
-		case 1:
-			return run;
-		case 2:
-			return wander;
-		case 3:
-			return hide;
-		default:
-			throw "out of range in Output";
-		}
-	}
 
 } Output;
 
@@ -104,42 +72,55 @@ constexpr pair<Input, Output> const samples[18] =
 
 	
 
-string const INPUT_TEST_FILE_NAME = "test.in";
-string const OUTPUT_TEST_FILE_NAME = "test.log";
+string const DEFAULT_INPUT_TEST_FILE_NAME = "input.txt";
+string const DEFAULT_OUTPUT_TEST_FILE_NAME = "output.txt";
+
+
+
+#define INPUT_NEURONS 4
+#ifndef HIDDEN_NEURONS
+	#define HIDDEN_NEURONS 3
+#endif
+#define OUTPUT_NEURONS 4
 
 
 
 int main(int argc, char const *argv[])
 {
 	// initialization
-	ofstream info("info.txt");
-
 	srand(time(0));
 
-	NeuronLayer<4> input;
-	NeuronLayer<3> hidden;
-	NeuronLayer<4> output;
+
+	NeuronLayer<INPUT_NEURONS> input;
+	NeuronLayer<HIDDEN_NEURONS> hidden;
+	NeuronLayer<OUTPUT_NEURONS> output;
 
 	input.init();
 	hidden.init();
 	output.init();
 
 
-	NeuronWeights<4, 3> ihw;
-	NeuronWeights<3, 4> how;
+	NeuronWeights<INPUT_NEURONS, HIDDEN_NEURONS> ihw;
+	NeuronWeights<HIDDEN_NEURONS, OUTPUT_NEURONS> how;
 
 	ihw.randomInit();
 	how.randomInit();
 
 	// learning
 	{
-		double ideal[4];
-		double erro[4];
-		double errh[3];
 
-		info << "[I] - Iteration, [S] - Sample, [E] - Error\b\n";
+		ofstream info("info.txt");
+		if(info.is_open())
+			info << "[I] - Iteration, [S] - Sample, [E] - Error\n";
+		else
+			cerr << "can't open info.txt file" << endl;
+
+		array<double, OUTPUT_NEURONS> ideal;
+		array<double, OUTPUT_NEURONS> erro;
+		array<double, HIDDEN_NEURONS> errh;
 		double mse;
 
+		cout << "learning..." << endl;
 		for(int i = 0, s = 0; i < 100000ll; ++i, ++s) {
 			if(s == 18)
 				s = 0;
@@ -164,29 +145,40 @@ int main(int argc, char const *argv[])
 			reverse_propagation(output, hidden, how, erro);
 			reverse_propagation(hidden, input, ihw, errh);
 
-			mse = 0.0f;
-			for(int i = 0; i < 4; ++i) {
-				mse += erro[i]*erro[i];
+			if(info.is_open()) {
+				mse = 0.0f;
+				for(int i = 0; i < 4; ++i) {
+					mse += erro[i]*erro[i];
+				}
+				mse /= 4;
+				info << "[I] = " << i << ",\t[S] = " << s <<
+					",\t[E] = " << mse << "\n";
 			}
-			mse /= 4;
-			info << "[I] = " << i << ",\t[S] = " << s << ",\t[E] = " << mse << "\n";
 		}
+		cout << "learning complete" << endl;
 	}
 
+	cout << "testing from file..." << endl;
 	Input in;
-	// testing from file
 	{
-		ifstream testin(INPUT_TEST_FILE_NAME);
+		string inputfilename = argc > 1 ?
+			string(argv[1]) : DEFAULT_INPUT_TEST_FILE_NAME;
+		ifstream testin(inputfilename);
 		if(!testin.is_open()) {
-			cerr << "can't open input test file" << endl;
-			goto end_test_from_file_label;
-		}
-		ofstream testout(OUTPUT_TEST_FILE_NAME);
-		if(!testout.is_open()) {
-			cerr << "can't open output test file" << endl;
-			goto end_test_from_file_label;
+			cerr << "can't open input test file '" <<
+				inputfilename << "'" << endl;
+			goto fail_testing_from_file_label;
 		}
 		
+		string outputfilename = argc > 2 ?
+			string(argv[2]) : DEFAULT_OUTPUT_TEST_FILE_NAME;
+		ofstream testout(outputfilename);
+		if(!testout.is_open()) {
+			cerr << "can't open output test file" << outputfilename << endl;
+			goto fail_testing_from_file_label;
+		}
+		
+
 		// for beauty
 		testout.setf(testout.fixed);
 		testout << setprecision(3);
@@ -210,14 +202,27 @@ int main(int argc, char const *argv[])
 			testout << "Hide:    " << output[3] << '\n';
 			testout << '\n';
 		}
+		goto success_testing_from_file_label;
 	}
-end_test_from_file_label:
+fail_testing_from_file_label:
+		cout << "testing from file fail" << endl;
+		goto end_testing_from_file_label;
+
+success_testing_from_file_label:
+		cout << "testing from file success" << endl;
+		goto end_testing_from_file_label;
+
+end_testing_from_file_label:
+
 
 	// for beauty again
 	cout.setf(cout.fixed);
 	cout << setprecision(3);
 
 	// testing form cin
+	cout << "-------------------------------------------------" << endl;
+	cout << "Start testing from character input" << endl;
+	cout << "Enter parameters" << endl;
 	while(true) {
 		cout << "Health:  "; if(!(cin >> in.health)) break;
 		cout << "Knife:   "; if(!(cin >> in.knife)) break;
