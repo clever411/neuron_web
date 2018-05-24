@@ -1,8 +1,11 @@
-all: main.out
+all: debug
 
 
-main.out: main.cpp
-	g++ -o main.out -g -Wall main.cpp
+debug: main.cpp
+	g++ -o neuweb -g3 -Wall main.cpp
+
+release: main.cpp
+	g++ -o neuweb -O3 main.cpp
 
 fill: fill.out
 	fill.out

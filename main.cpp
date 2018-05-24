@@ -6,12 +6,12 @@
 #include <random>
 #include <utility>
 
-#include "IostreamFunctions.hpp"
 #include "NeuronWeb.hpp"
+
+#include <clever/IostreamFunctions.hpp>
 
 using namespace clever;
 using namespace std;
-
 
 
 typedef struct
@@ -30,6 +30,7 @@ template<class Istream> Istream &operator>>(Istream &is, Input &input)
 	is >> input.enemy;
 	return is;
 }
+
 
 
 
@@ -91,13 +92,9 @@ int main(int argc, char const *argv[])
 	srand(time(0));
 
 
-	NeuronLayer<INPUT_NEURONS> input;
-	NeuronLayer<HIDDEN_NEURONS> hidden;
-	NeuronLayer<OUTPUT_NEURONS> output;
-
-	input.init();
-	hidden.init();
-	output.init();
+	Layer<double, INPUT_NEURONS> input;
+	Layer<double, HIDDEN_NEURONS> hidden;
+	Layer<double, OUTPUT_NEURONS> output;
 
 
 	NeuronWeights<INPUT_NEURONS, HIDDEN_NEURONS> ihw;
